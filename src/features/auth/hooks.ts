@@ -20,6 +20,19 @@ export function useLogin() {
   });
 }
 
+export function useRegister() {
+  const setUser = useAuthStore((state) => state.setUser);
+
+  return useMutation({
+    mutationFn: authApi.register,
+    onSuccess: (response) => {
+      session.setAccessToken(response.accessToken);
+      session.setRefreshToken(response.refreshToken);
+      setUser(response.user);
+    },
+  });
+}
+
 export function useMe(enabled = true) {
   return useQuery({
     queryKey: ['auth', 'me'],

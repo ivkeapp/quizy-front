@@ -5,6 +5,8 @@ dist/
 !.env.example
 *.log
 npmver.txt
+playwright-report/
+test-results/
 
 # Local source-of-truth docs should not be tracked in frontend repo changes
 API.md
