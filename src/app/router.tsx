@@ -7,6 +7,7 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 import { QuizPlayPage } from '@/pages/QuizPlayPage';
 import { QuizResultPage } from '@/pages/QuizResultPage';
 import { QuizSetupPage } from '@/pages/QuizSetupPage';
+import { RegisterPage } from '@/pages/RegisterPage';
 import { AppLayout } from '@/shared/ui/AppLayout';
 import { ProtectedRoute } from '@/shared/ui/ProtectedRoute';
 
@@ -22,6 +23,10 @@ export const router = createBrowserRouter([
       {
         path: 'login',
         element: <LoginPage />,
+      },
+      {
+        path: 'register',
+        element: <RegisterPage />,
       },
       {
         path: 'categories',

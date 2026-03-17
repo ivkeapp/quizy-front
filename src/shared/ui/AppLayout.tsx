@@ -32,9 +32,14 @@ export function AppLayout() {
                 Logout ({user?.email})
               </button>
             ) : (
-              <NavLink to="/login" className="rounded bg-slate-900 px-3 py-1.5 text-white">
-                Login
-              </NavLink>
+              <>
+                <NavLink to="/register" className="text-slate-600 hover:text-slate-900">
+                  Register
+                </NavLink>
+                <NavLink to="/login" className="rounded bg-slate-900 px-3 py-1.5 text-white">
+                  Login
+                </NavLink>
+              </>
             )}
           </nav>
         </div>
