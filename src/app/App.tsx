@@ -1,6 +1,9 @@
+import { Suspense } from 'react';
 import { RouterProvider } from 'react-router-dom';
 
 import { useAuthBootstrap } from '@/features/auth/hooks';
+import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
+import { LoadingState } from '@/shared/ui/LoadingState';
 
 import { router } from './router';
 import { AppProviders } from './providers/AppProviders';
@@ -13,7 +16,11 @@ function AppContent() {
 export function App() {
   return (
     <AppProviders>
-      <AppContent />
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingState label="Loading page..." />}>
+          <AppContent />
+        </Suspense>
+      </ErrorBoundary>
     </AppProviders>
   );
 }

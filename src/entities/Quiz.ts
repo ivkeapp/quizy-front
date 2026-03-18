@@ -51,3 +51,13 @@ export type QuizResultResponse = {
   total_questions: number;
   duration_seconds: number;
 };
+
+export type ActiveQuizSnapshot = {
+  sessionId: number;
+  startPayload: QuizStartResponse;
+  currentIndex: number;
+  latestScore: number;
+  correctAnswers: number;
+  endsAt: number;
+  questionStartedAt: number;
+};

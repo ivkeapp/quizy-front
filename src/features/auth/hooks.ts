@@ -1,6 +1,9 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
+import { queryKeys } from '@/shared/config/queryKeys';
+import { useApiMutation } from '@/shared/hooks/useApiMutation';
+import { useApiQuery } from '@/shared/hooks/useApiQuery';
+import { authEvents } from '@/shared/lib/authEvents';
 import type { ApiError } from '@/shared/api/types';
 import { session } from '@/shared/lib/session';
 
@@ -10,7 +13,7 @@ import { useAuthStore } from './store';
 export function useLogin() {
   const setUser = useAuthStore((state) => state.setUser);
 
-  return useMutation({
+  return useApiMutation({
     mutationFn: authApi.login,
     onSuccess: (response) => {
       session.setAccessToken(response.accessToken);
@@ -23,7 +26,7 @@ export function useLogin() {
 export function useRegister() {
   const setUser = useAuthStore((state) => state.setUser);
 
-  return useMutation({
+  return useApiMutation({
     mutationFn: authApi.register,
     onSuccess: (response) => {
       session.setAccessToken(response.accessToken);
@@ -34,11 +37,12 @@ export function useRegister() {
 }
 
 export function useMe(enabled = true) {
-  return useQuery({
-    queryKey: ['auth', 'me'],
+  return useApiQuery({
+    queryKey: queryKeys.auth.me,
     queryFn: authApi.me,
     enabled,
     retry: false,
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -59,6 +63,13 @@ export function useAuthBootstrap() {
       session.clear();
     }
   }, [meQuery.error, setUser]);
+
+  useEffect(() => {
+    return authEvents.subscribe('unauthorized', () => {
+      setUser(null);
+      session.clear();
+    });
+  }, [setUser]);
 }
 
 export function useLogout() {

@@ -1,20 +1,24 @@
+import { lazy } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 
-import { CategoriesPage } from '@/pages/CategoriesPage';
-import { LeaderboardPage } from '@/pages/LeaderboardPage';
-import { LoginPage } from '@/pages/LoginPage';
-import { NotFoundPage } from '@/pages/NotFoundPage';
-import { QuizPlayPage } from '@/pages/QuizPlayPage';
-import { QuizResultPage } from '@/pages/QuizResultPage';
-import { QuizSetupPage } from '@/pages/QuizSetupPage';
-import { RegisterPage } from '@/pages/RegisterPage';
 import { AppLayout } from '@/shared/ui/AppLayout';
 import { ProtectedRoute } from '@/shared/ui/ProtectedRoute';
+import { RouteErrorBoundary } from '@/shared/ui/RouteErrorBoundary';
+
+const CategoriesPage = lazy(() => import('@/pages/CategoriesPage').then((module) => ({ default: module.CategoriesPage })));
+const LeaderboardPage = lazy(() => import('@/pages/LeaderboardPage').then((module) => ({ default: module.LeaderboardPage })));
+const LoginPage = lazy(() => import('@/pages/LoginPage').then((module) => ({ default: module.LoginPage })));
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })));
+const QuizPlayPage = lazy(() => import('@/pages/QuizPlayPage').then((module) => ({ default: module.QuizPlayPage })));
+const QuizResultPage = lazy(() => import('@/pages/QuizResultPage').then((module) => ({ default: module.QuizResultPage })));
+const QuizSetupPage = lazy(() => import('@/pages/QuizSetupPage').then((module) => ({ default: module.QuizSetupPage })));
+const RegisterPage = lazy(() => import('@/pages/RegisterPage').then((module) => ({ default: module.RegisterPage })));
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <AppLayout />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         index: true,

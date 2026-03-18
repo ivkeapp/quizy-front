@@ -1,9 +1,10 @@
 import axios from 'axios';
 
+import { authEvents } from '@/shared/lib/authEvents';
 import { env } from '@/shared/lib/env';
 import { session } from '@/shared/lib/session';
 
-import type { ApiError } from './types';
+import { normalizeApiError } from './normalizeApiError';
 
 const AUTH_REFRESH_PATH = '/api/auth/refresh';
 
@@ -47,6 +48,7 @@ async function refreshAccessToken() {
     })
     .catch(() => {
       session.clear();
+      authEvents.emit('unauthorized');
       return null;
     })
     .finally(() => {
@@ -62,8 +64,12 @@ http.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (!error.response || !originalRequest) {
-      return Promise.reject(error);
+    if (!originalRequest) {
+      return Promise.reject(normalizeApiError(error));
+    }
+
+    if (!error.response) {
+      return Promise.reject(normalizeApiError(error));
     }
 
     const isUnauthorized = error.response.status === 401;
@@ -76,14 +82,10 @@ http.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return http(originalRequest);
       }
+
+      authEvents.emit('unauthorized');
     }
 
-    const apiError: ApiError = {
-      error: error.response?.data?.error ?? 'RequestError',
-      message: error.response?.data?.message ?? 'Unexpected request error',
-      code: error.response?.status ?? 500,
-    };
-
-    return Promise.reject(apiError);
+    return Promise.reject(normalizeApiError(error));
   },
 );

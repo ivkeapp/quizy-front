@@ -1,10 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import type { QuizQuestion, QuizStartResponse } from '@/entities/Quiz';
 import { getApiErrorMessage } from '@/features/auth/hooks';
-import { useSubmitAnswer } from '@/features/quiz/hooks';
-import { formatTime } from '@/shared/lib/format';
+import { QuizProgress } from '@/features/quiz/components/QuizProgress';
+import { QuizTimer } from '@/features/quiz/components/QuizTimer';
+import { useQuizStatus, useSubmitAnswer } from '@/features/quiz/hooks';
+import {
+  getPersistedQuizSession,
+  savePersistedQuizSession,
+} from '@/features/quiz/storage';
+import { useQuizLeaveGuard } from '@/features/quiz/useQuizLeaveGuard';
+import { Button } from '@/shared/ui/Button';
+import { Card } from '@/shared/ui/Card';
 import { ErrorState } from '@/shared/ui/ErrorState';
 
 type QuizPlayLocationState = {
@@ -19,18 +27,49 @@ export function QuizPlayPage() {
 
   const parsedSessionId = Number(sessionId);
   const state = (location.state as QuizPlayLocationState | null) ?? null;
-  const startPayload = state?.startPayload;
+  const persistedSession = useMemo(
+    () => (Number.isFinite(parsedSessionId) ? getPersistedQuizSession(parsedSessionId) : null),
+    [parsedSessionId],
+  );
+  const startPayload = state?.startPayload ?? persistedSession?.startPayload;
 
   const submitAnswer = useSubmitAnswer(parsedSessionId);
+  const quizStatus = useQuizStatus(parsedSessionId, Number.isFinite(parsedSessionId) && Boolean(startPayload));
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(persistedSession?.currentIndex ?? 0);
   const [selectedAnswerId, setSelectedAnswerId] = useState<number | null>(null);
-  const [remainingSeconds, setRemainingSeconds] = useState(startPayload?.duration ?? 0);
-  const [latestScore, setLatestScore] = useState(0);
-  const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [remainingSeconds, setRemainingSeconds] = useState(() => {
+    if (persistedSession) {
+      return Math.max(0, Math.floor((persistedSession.endsAt - Date.now()) / 1000));
+    }
 
-  const endTimeRef = useRef(Date.now() + (startPayload?.duration ?? 0) * 1000);
-  const questionStartedAtRef = useRef(Date.now());
+    return startPayload?.duration ?? 0;
+  });
+  const [latestScore, setLatestScore] = useState(persistedSession?.latestScore ?? 0);
+  const [correctAnswers, setCorrectAnswers] = useState(persistedSession?.correctAnswers ?? 0);
+
+  const endTimeRef = useRef(
+    persistedSession?.endsAt ?? Date.now() + (startPayload?.duration ?? 0) * 1000,
+  );
+  const questionStartedAtRef = useRef(persistedSession?.questionStartedAt ?? Date.now());
+
+  useQuizLeaveGuard(Boolean(startPayload) && remainingSeconds > 0);
+
+  const persistSnapshot = useCallback(() => {
+    if (!startPayload || Number.isNaN(parsedSessionId)) {
+      return;
+    }
+
+    savePersistedQuizSession({
+      sessionId: parsedSessionId,
+      startPayload,
+      currentIndex,
+      latestScore,
+      correctAnswers,
+      endsAt: endTimeRef.current,
+      questionStartedAt: questionStartedAtRef.current,
+    });
+  }, [correctAnswers, currentIndex, latestScore, parsedSessionId, startPayload]);
 
   useEffect(() => {
     if (!startPayload) {
@@ -48,6 +87,26 @@ export function QuizPlayPage() {
 
     return () => clearInterval(timer);
   }, [navigate, parsedSessionId, startPayload]);
+
+  useEffect(() => {
+    if (!quizStatus.data) {
+      return;
+    }
+
+    if (quizStatus.data.status === 'COMPLETED' || quizStatus.data.status === 'EXPIRED') {
+      navigate(`/quiz/session/${parsedSessionId}/result`, { replace: true });
+      return;
+    }
+
+    setLatestScore(quizStatus.data.score);
+    setCorrectAnswers(quizStatus.data.correct_answers);
+    setRemainingSeconds(quizStatus.data.remaining_seconds);
+    endTimeRef.current = Date.now() + quizStatus.data.remaining_seconds * 1000;
+  }, [navigate, parsedSessionId, quizStatus.data]);
+
+  useEffect(() => {
+    persistSnapshot();
+  }, [persistSnapshot]);
 
   const currentQuestion: QuizQuestion | undefined = useMemo(
     () => startPayload?.questions[currentIndex],
@@ -88,18 +147,16 @@ export function QuizPlayPage() {
   };
 
   return (
-    <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm">
+    <Card className="space-y-4">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">Quiz in progress</h1>
-          <p className="text-sm text-slate-600">
-            Question {currentIndex + 1} / {startPayload.questions.length}
-          </p>
+          <p className="text-sm text-slate-600">Session #{parsedSessionId}</p>
         </div>
-        <div className="rounded bg-slate-900 px-3 py-2 text-sm font-semibold text-white">
-          Time left: {formatTime(remainingSeconds)}
-        </div>
+        <QuizTimer remainingSeconds={remainingSeconds} />
       </header>
+
+      <QuizProgress currentIndex={currentIndex} totalQuestions={startPayload.questions.length} />
 
       <div className="rounded border border-slate-200 p-4">
         <h2 className="font-medium">{currentQuestion?.text}</h2>
@@ -112,6 +169,7 @@ export function QuizPlayPage() {
                 key={answer.id}
                 type="button"
                 onClick={() => setSelectedAnswerId(answer.id)}
+                data-testid={`answer-option-${answer.id}`}
                 className={`rounded border px-3 py-2 text-left text-sm ${
                   isActive ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white'
                 }`}
@@ -129,21 +187,18 @@ export function QuizPlayPage() {
           <span className="font-semibold text-slate-900">{correctAnswers}</span>
         </div>
 
-        <button
+        <Button
           type="button"
           onClick={onSubmitAnswer}
           disabled={selectedAnswerId === null || submitAnswer.isPending}
-          className="rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
         >
           {submitAnswer.isPending ? 'Submitting...' : 'Submit & next'}
-        </button>
+        </Button>
       </div>
 
       {submitAnswer.isError ? (
-        <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {getApiErrorMessage(submitAnswer.error, 'Unable to submit answer')}
-        </div>
+        <ErrorState message={getApiErrorMessage(submitAnswer.error, 'Unable to submit answer')} />
       ) : null}
-    </section>
+    </Card>
   );
 }

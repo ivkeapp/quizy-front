@@ -1,5 +1,8 @@
+import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import { clearPersistedQuizSession } from '@/features/quiz/storage';
+import { Card } from '@/shared/ui/Card';
 import { useQuizResult } from '@/features/quiz/hooks';
 import { ErrorState } from '@/shared/ui/ErrorState';
 import { LoadingState } from '@/shared/ui/LoadingState';
@@ -10,6 +13,12 @@ export function QuizResultPage() {
 
   const result = useQuizResult(parsedSessionId, Number.isFinite(parsedSessionId));
 
+  useEffect(() => {
+    if (Number.isFinite(parsedSessionId)) {
+      clearPersistedQuizSession(parsedSessionId);
+    }
+  }, [parsedSessionId]);
+
   if (result.isLoading) {
     return <LoadingState label="Loading result..." />;
   }
@@ -19,7 +28,7 @@ export function QuizResultPage() {
   }
 
   return (
-    <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm">
+    <Card className="space-y-4">
       <h1 className="text-xl font-semibold">Quiz Result</h1>
 
       <div className="grid gap-2 sm:grid-cols-2">
@@ -51,6 +60,6 @@ export function QuizResultPage() {
           Leaderboard
         </Link>
       </div>
-    </section>
+    </Card>
   );
 }
