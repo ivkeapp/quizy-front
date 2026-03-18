@@ -3,7 +3,7 @@ import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuthStatus, useLogout } from '@/features/auth/hooks';
 
 export function AppLayout() {
-  const { isAuthenticated, user } = useAuthStatus();
+  const { isAdmin, isAuthenticated, user } = useAuthStatus();
   const logout = useLogout();
 
   return (
@@ -23,13 +23,18 @@ export function AppLayout() {
             <NavLink to="/leaderboard" className="text-slate-600 hover:text-slate-900">
               Leaderboard
             </NavLink>
+            {isAdmin ? (
+              <NavLink to="/admin/questions" className="text-slate-600 hover:text-slate-900">
+                Admin
+              </NavLink>
+            ) : null}
             {isAuthenticated ? (
               <button
                 type="button"
                 onClick={logout}
                 className="rounded bg-slate-900 px-3 py-1.5 text-white"
               >
-                Logout ({user?.email})
+                Logout ({user?.name || user?.email})
               </button>
             ) : (
               <>

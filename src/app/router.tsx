@@ -6,6 +6,7 @@ import { ProtectedRoute } from '@/shared/ui/ProtectedRoute';
 import { RouteErrorBoundary } from '@/shared/ui/RouteErrorBoundary';
 
 const CategoriesPage = lazy(() => import('@/pages/CategoriesPage').then((module) => ({ default: module.CategoriesPage })));
+const AdminQuestionsPage = lazy(() => import('@/pages/AdminQuestionsPage').then((module) => ({ default: module.AdminQuestionsPage })));
 const LeaderboardPage = lazy(() => import('@/pages/LeaderboardPage').then((module) => ({ default: module.LeaderboardPage })));
 const LoginPage = lazy(() => import('@/pages/LoginPage').then((module) => ({ default: module.LoginPage })));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })));
@@ -50,6 +51,15 @@ export const router = createBrowserRouter([
           {
             path: 'leaderboard',
             element: <LeaderboardPage />,
+          },
+        ],
+      },
+      {
+        element: <ProtectedRoute requiredRole="admin" />,
+        children: [
+          {
+            path: 'admin/questions',
+            element: <AdminQuestionsPage />,
           },
         ],
       },

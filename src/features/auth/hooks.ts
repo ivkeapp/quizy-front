@@ -11,6 +11,7 @@ import * as authApi from './api';
 import { useAuthStore } from './store';
 
 export function useLogin() {
+  const setAuthResolved = useAuthStore((state) => state.setAuthResolved);
   const setUser = useAuthStore((state) => state.setUser);
 
   return useApiMutation({
@@ -19,11 +20,13 @@ export function useLogin() {
       session.setAccessToken(response.accessToken);
       session.setRefreshToken(response.refreshToken);
       setUser(response.user);
+      setAuthResolved(true);
     },
   });
 }
 
 export function useRegister() {
+  const setAuthResolved = useAuthStore((state) => state.setAuthResolved);
   const setUser = useAuthStore((state) => state.setUser);
 
   return useApiMutation({
@@ -32,6 +35,7 @@ export function useRegister() {
       session.setAccessToken(response.accessToken);
       session.setRefreshToken(response.refreshToken);
       setUser(response.user);
+      setAuthResolved(true);
     },
   });
 }
@@ -47,46 +51,85 @@ export function useMe(enabled = true) {
 }
 
 export function useAuthBootstrap() {
+  const setAuthResolved = useAuthStore((state) => state.setAuthResolved);
   const setUser = useAuthStore((state) => state.setUser);
   const token = session.getAccessToken();
+  const refreshToken = session.getRefreshToken();
   const meQuery = useMe(Boolean(token));
+  const refreshMutation = useApiMutation({
+    mutationFn: authApi.refresh,
+    onSuccess: (response) => {
+      session.setAccessToken(response.accessToken);
+      session.setRefreshToken(response.refreshToken);
+      setUser(response.user);
+      setAuthResolved(true);
+    },
+    onError: () => {
+      setUser(null);
+      session.clear();
+      setAuthResolved(true);
+    },
+  });
+
+  useEffect(() => {
+    if (token) {
+      return;
+    }
+
+    if (!refreshToken) {
+      setAuthResolved(true);
+      return;
+    }
+
+    if (!refreshMutation.isPending && !refreshMutation.isSuccess) {
+      refreshMutation.mutate();
+    }
+  }, [refreshMutation, refreshToken, setAuthResolved, token]);
 
   useEffect(() => {
     if (meQuery.data) {
       setUser(meQuery.data);
+      setAuthResolved(true);
     }
-  }, [meQuery.data, setUser]);
+  }, [meQuery.data, setAuthResolved, setUser]);
 
   useEffect(() => {
     if (meQuery.error) {
       setUser(null);
       session.clear();
+      setAuthResolved(true);
     }
-  }, [meQuery.error, setUser]);
+  }, [meQuery.error, setAuthResolved, setUser]);
 
   useEffect(() => {
     return authEvents.subscribe('unauthorized', () => {
       setUser(null);
       session.clear();
+      setAuthResolved(true);
     });
-  }, [setUser]);
+  }, [setAuthResolved, setUser]);
 }
 
 export function useLogout() {
+  const setAuthResolved = useAuthStore((state) => state.setAuthResolved);
   const setUser = useAuthStore((state) => state.setUser);
 
   return () => {
     session.clear();
     setUser(null);
+    setAuthResolved(true);
   };
 }
 
 export function useAuthStatus() {
+  const isAuthResolved = useAuthStore((state) => state.isAuthResolved);
   const user = useAuthStore((state) => state.user);
   const token = session.getAccessToken();
 
   return {
+    isAuthResolved,
     isAuthenticated: Boolean(token),
+    isAdmin: user?.role === 'admin',
     user,
   };
 }

@@ -14,4 +14,7 @@ export const queryKeys = {
       ['leaderboard', period, page, limit] as const,
     myPosition: (period: string) => ['leaderboard', 'my-position', period] as const,
   },
+  admin: {
+    questions: ['admin', 'questions'] as const,
+  },
 };
