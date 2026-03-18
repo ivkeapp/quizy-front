@@ -20,7 +20,7 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
 export async function register(payload: {
   email: string;
   password: string;
-  name?: string;
+  name: string;
 }): Promise<AuthResponse> {
   const { data } = await http.post<AuthResponse>('/api/auth/register', payload);
   return data;

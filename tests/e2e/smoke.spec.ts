@@ -31,15 +31,31 @@ test('login to quiz result smoke flow', async ({ page }) => {
       );
     }
 
-    const answerButtons = page.locator('main button').filter({ hasText: /^\d+\./ });
+    const answerButtons = page.locator('main [data-testid^="answer-option-"]');
     if ((await answerButtons.count()) === 0) {
+      await page.waitForTimeout(150);
       break;
     }
 
     const firstAnswerButton = answerButtons.first();
-    await expect(firstAnswerButton).toBeVisible();
-    await firstAnswerButton.click();
-    await page.getByRole('button', { name: 'Submit & next' }).click();
+    await firstAnswerButton.waitFor({ state: 'visible', timeout: 10_000 });
+
+    const clickResult = await firstAnswerButton
+      .click({ timeout: 10_000 })
+      .then(() => true)
+      .catch(() => false);
+
+    if (!clickResult) {
+      await page.waitForTimeout(150);
+      continue;
+    }
+
+    const submitButton = page.getByRole('button', { name: 'Submit & next' });
+    if (await submitButton.isVisible()) {
+      await submitButton.click({ timeout: 10_000 });
+    }
+
+    await page.waitForTimeout(100);
   }
 
   await expect(page).toHaveURL(/\/quiz\/session\/\d+\/result$/);

@@ -3,8 +3,8 @@ export type LeaderboardPeriod = '7d' | '30d' | '3m' | '6m' | '12m';
 export type LeaderboardUser = {
   rank: number;
   userId: number;
-  email: string;
-  totalScore: number;
+  name: string;
+  score: number;
 };
 
 export type LeaderboardResponse = {
