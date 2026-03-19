@@ -26,7 +26,11 @@ export function QuizSetupPage() {
   const activeSessionId = getLastActiveQuizSessionId();
 
   const onStartQuiz = async () => {
-    const session = await startQuiz.mutateAsync(questionsCount);
+    const selectedCategoryId = categoryId ? Number(categoryId) : null;
+    const session = await startQuiz.mutateAsync({
+      questions_count: questionsCount,
+      category_id: selectedCategoryId,
+    });
     const now = Date.now();
 
     savePersistedQuizSession({
@@ -42,7 +46,7 @@ export function QuizSetupPage() {
     navigate(`/quiz/session/${session.session_id}`, {
       state: {
         startPayload: session,
-        selectedCategoryId: categoryId || null,
+        selectedCategoryId,
       },
     });
   };
@@ -86,7 +90,7 @@ export function QuizSetupPage() {
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium">Category (optional display only)</label>
+        <label className="mb-2 block text-sm font-medium">Category</label>
         {categories.isLoading ? <LoadingState label="Loading categories..." /> : null}
         {!categories.isLoading ? (
           <select
@@ -102,9 +106,6 @@ export function QuizSetupPage() {
             ))}
           </select>
         ) : null}
-        <p className="mt-1 text-xs text-slate-500">
-          `POST /api/quiz/start` currently accepts only `questions_count`, so category selection is not sent.
-        </p>
       </div>
 
       {startQuiz.isError ? (

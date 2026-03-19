@@ -7,6 +7,7 @@ import { RouteErrorBoundary } from '@/shared/ui/RouteErrorBoundary';
 
 const CategoriesPage = lazy(() => import('@/pages/CategoriesPage').then((module) => ({ default: module.CategoriesPage })));
 const AdminQuestionsPage = lazy(() => import('@/pages/AdminQuestionsPage').then((module) => ({ default: module.AdminQuestionsPage })));
+const HomePage = lazy(() => import('@/pages/HomePage').then((module) => ({ default: module.HomePage })));
 const LeaderboardPage = lazy(() => import('@/pages/LeaderboardPage').then((module) => ({ default: module.LeaderboardPage })));
 const LoginPage = lazy(() => import('@/pages/LoginPage').then((module) => ({ default: module.LoginPage })));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })));
@@ -23,7 +24,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <QuizSetupPage />,
+        element: <HomePage />,
       },
       {
         path: 'login',
@@ -38,19 +39,19 @@ export const router = createBrowserRouter([
         element: <CategoriesPage />,
       },
       {
-        path: 'quiz/session/:sessionId',
-        element: <QuizPlayPage />,
-      },
-      {
-        path: 'quiz/session/:sessionId/result',
-        element: <QuizResultPage />,
+        path: 'leaderboard',
+        element: <LeaderboardPage />,
       },
       {
         element: <ProtectedRoute />,
         children: [
           {
-            path: 'leaderboard',
-            element: <LeaderboardPage />,
+            path: 'quiz/session/:sessionId',
+            element: <QuizPlayPage />,
+          },
+          {
+            path: 'quiz/session/:sessionId/result',
+            element: <QuizResultPage />,
           },
         ],
       },

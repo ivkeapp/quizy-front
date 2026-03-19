@@ -1,4 +1,4 @@
-import type { QuizQuestionsCount, SubmitAnswerPayload } from '@/entities/Quiz';
+import type { QuizStartPayload, SubmitAnswerPayload } from '@/entities/Quiz';
 import { queryKeys } from '@/shared/config/queryKeys';
 import { useApiMutation } from '@/shared/hooks/useApiMutation';
 import { useApiQuery } from '@/shared/hooks/useApiQuery';
@@ -7,7 +7,7 @@ import * as quizApi from './api';
 
 export function useStartQuiz() {
   return useApiMutation({
-    mutationFn: (questionsCount: QuizQuestionsCount) => quizApi.startQuiz(questionsCount),
+    mutationFn: (payload: QuizStartPayload) => quizApi.startQuiz(payload),
   });
 }
 

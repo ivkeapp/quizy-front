@@ -1,6 +1,6 @@
 import type {
-  QuizQuestionsCount,
   QuizResultResponse,
+  QuizStartPayload,
   QuizStartResponse,
   QuizStatusResponse,
   SubmitAnswerPayload,
@@ -8,10 +8,8 @@ import type {
 } from '@/entities/Quiz';
 import { http } from '@/shared/api/http';
 
-export async function startQuiz(questionsCount: QuizQuestionsCount): Promise<QuizStartResponse> {
-  const { data } = await http.post<QuizStartResponse>('/api/quiz/start', {
-    questions_count: questionsCount,
-  });
+export async function startQuiz(payload: QuizStartPayload): Promise<QuizStartResponse> {
+  const { data } = await http.post<QuizStartResponse>('/api/quiz/start', payload);
   return data;
 }
 

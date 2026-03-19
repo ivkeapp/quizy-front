@@ -1,5 +1,10 @@
 export type QuizQuestionsCount = '10' | '20' | '30' | '50';
 
+export type QuizStartPayload = {
+  questions_count: QuizQuestionsCount;
+  category_id?: number | null;
+};
+
 export type QuizAnswer = {
   id: number;
   text: string;
