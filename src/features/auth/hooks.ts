@@ -31,12 +31,20 @@ export function useRegister() {
 
   return useApiMutation({
     mutationFn: authApi.register,
-    onSuccess: (response) => {
-      session.setAccessToken(response.accessToken);
-      session.setRefreshToken(response.refreshToken);
-      setUser(response.user);
+    onSuccess: () => {
+      session.clear();
+      setUser(null);
       setAuthResolved(true);
     },
+  });
+}
+
+export function useVerifyEmail(token: string | null) {
+  return useApiQuery({
+    queryKey: ['auth', 'verify-email', token],
+    queryFn: () => authApi.verifyEmail(String(token)),
+    enabled: Boolean(token),
+    retry: false,
   });
 }
 

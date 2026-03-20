@@ -15,6 +15,7 @@ const QuizPlayPage = lazy(() => import('@/pages/QuizPlayPage').then((module) => 
 const QuizResultPage = lazy(() => import('@/pages/QuizResultPage').then((module) => ({ default: module.QuizResultPage })));
 const QuizSetupPage = lazy(() => import('@/pages/QuizSetupPage').then((module) => ({ default: module.QuizSetupPage })));
 const RegisterPage = lazy(() => import('@/pages/RegisterPage').then((module) => ({ default: module.RegisterPage })));
+const VerifyEmailPage = lazy(() => import('@/pages/VerifyEmailPage').then((module) => ({ default: module.VerifyEmailPage })));
 
 export const router = createBrowserRouter([
   {
@@ -33,6 +34,10 @@ export const router = createBrowserRouter([
       {
         path: 'register',
         element: <RegisterPage />,
+      },
+      {
+        path: 'verify-email',
+        element: <VerifyEmailPage />,
       },
       {
         path: 'categories',

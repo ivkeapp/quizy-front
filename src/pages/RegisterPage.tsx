@@ -1,14 +1,13 @@
 import { FormEvent, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import { getApiErrorMessage, useRegister } from '@/features/auth/hooks';
 
 export function RegisterPage() {
-  const navigate = useNavigate();
-
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
 
   const register = useRegister();
 
@@ -23,8 +22,34 @@ export function RegisterPage() {
       name: normalizedName,
     });
 
-    navigate('/', { replace: true });
+    setSubmittedEmail(email.trim());
   };
+
+  if (submittedEmail) {
+    return (
+      <div className="mx-auto w-full max-w-md rounded-xl bg-white p-6 shadow-sm">
+        <h1 className="text-xl font-semibold">Confirm your email</h1>
+        <p className="mt-2 text-sm text-slate-600">
+          We sent a verification link to <span className="font-medium text-slate-900">{submittedEmail}</span>.
+        </p>
+        <p className="mt-2 text-sm text-slate-600">
+          Open your inbox and click the link to verify your account before signing in.
+        </p>
+        <div className="mt-4 flex gap-2">
+          <Link className="inline-flex rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white" to="/login">
+            Go to login
+          </Link>
+          <button
+            className="inline-flex rounded border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            type="button"
+            onClick={() => setSubmittedEmail(null)}
+          >
+            Use another email
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-md rounded-xl bg-white p-6 shadow-sm">

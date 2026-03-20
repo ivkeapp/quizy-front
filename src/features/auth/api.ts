@@ -10,6 +10,12 @@ export type AuthResponse = {
   accessToken: string;
   refreshToken: string;
   user: User;
+  verificationEmailSent?: boolean;
+};
+
+export type VerifyEmailResponse = {
+  verified: boolean;
+  message: string;
 };
 
 export async function login(payload: LoginPayload): Promise<AuthResponse> {
@@ -34,6 +40,13 @@ export async function me(): Promise<User> {
 export async function refresh(): Promise<AuthResponse> {
   const { data } = await http.post<AuthResponse>('/api/auth/refresh', {
     refresh_token: null,
+  });
+  return data;
+}
+
+export async function verifyEmail(token: string): Promise<VerifyEmailResponse> {
+  const { data } = await http.get<VerifyEmailResponse>('/api/auth/verify-email', {
+    params: { token },
   });
   return data;
 }
